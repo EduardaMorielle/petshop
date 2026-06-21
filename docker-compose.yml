@@ -1,0 +1,95 @@
+# ============================================================
+# ARQUIVO: docker-compose.yml
+# O QUE É: Orquestrador de containers Docker.
+#          Define e conecta os 3 containers da aplicação:
+#          banco de dados (db), API (api) e front-end (frontend).
+#
+# COMO FUNCIONA:
+#   "docker-compose up --build" lê este arquivo e:
+#     1. Cria a rede interna "petshop_default"
+#     2. Sobe o container MySQL (db)
+#     3. Aguarda o MySQL ficar saudável (healthcheck)
+#     4. Faz o build e sobe o container da API Spring Boot
+#     5. Faz o build e sobe o container do front-end Angular/Nginx
+#
+# COMUNICAÇÃO ENTRE CONTAINERS:
+#   Os containers se comunicam pelo nome do serviço como hostname.
+#   Por isso o application.properties usa "db" em vez de "localhost":
+#     jdbc:mysql://db:3306/petshopdb
+#   "db" é resolvido pelo Docker para o IP interno do container MySQL.
+#
+# PORTAS ESCOLHIDAS:
+#   8743 (API) e 4743 (frontend) — portas específicas para evitar
+#   conflito com outros alunos no servidor da UEA.
+# ============================================================
+
+version: '3.8'
+
+services:
+
+  # --------------------------------------------------------
+  # SERVIÇO: db (MySQL 8)
+  # --------------------------------------------------------
+  db:
+    image: mysql:8.0          # usa a imagem oficial do MySQL 8
+    container_name: petshop-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root123     # senha do root (não usada pela app)
+      MYSQL_DATABASE: petshopdb        # banco criado automaticamente
+      MYSQL_USER: petshop              # usuário da aplicação
+      MYSQL_PASSWORD: petshop123       # senha do usuário da aplicação
+    ports:
+      - "3306:3306"  # expõe a porta do MySQL para o host (útil para depuração)
+    volumes:
+      # Volume persistente: os dados do banco sobrevivem a reinicializações
+      # Sem isso, os dados seriam apagados toda vez que o container reiniciar
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # Verifica se o MySQL está pronto para receber conexões
+      # O container da API só sobe DEPOIS que este healthcheck passar
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s   # verifica a cada 10 segundos
+      timeout: 5s     # timeout de 5 segundos por verificação
+      retries: 5      # tenta 5 vezes antes de marcar como unhealthy
+
+  # --------------------------------------------------------
+  # SERVIÇO: api (Spring Boot)
+  # --------------------------------------------------------
+  api:
+    build: ./backend           # usa o Dockerfile em ./backend/
+    container_name: petshop-api
+    ports:
+      - "8743:8743"            # expõe a porta da API para o host
+    environment:
+      # Sobrescreve as configurações do application.properties via variáveis
+      # de ambiente. Isso permite usar as mesmas configurações do Docker
+      # sem modificar o arquivo de propriedades.
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/petshopdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Manaus
+      SPRING_DATASOURCE_USERNAME: petshop
+      SPRING_DATASOURCE_PASSWORD: petshop123
+    depends_on:
+      db:
+        # Aguarda o healthcheck do MySQL passar antes de subir
+        # Sem isso, a API tentaria conectar antes do banco estar pronto
+        # e falharia na inicialização
+        condition: service_healthy
+
+  # --------------------------------------------------------
+  # SERVIÇO: frontend (Angular + Nginx)
+  # --------------------------------------------------------
+  frontend:
+    build: ./frontend          # usa o Dockerfile em ./frontend/
+    container_name: petshop-frontend
+    ports:
+      - "4743:4743"            # expõe a porta do Nginx para o host
+    depends_on:
+      - api                    # sobe depois da API (boa prática)
+
+# --------------------------------------------------------
+# VOLUMES: armazenamento persistente
+# --------------------------------------------------------
+volumes:
+  # Volume nomeado para os dados do MySQL.
+  # Gerenciado pelo Docker — persiste mesmo após "docker-compose down".
+  # Para apagar os dados: "docker-compose down -v"
+  db_data:

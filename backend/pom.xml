@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  ARQUIVO: pom.xml
+  O QUE É: Arquivo de configuração do Maven (gerenciador de
+           dependências e build do projeto Java).
+           É equivalente ao package.json do Node/Angular.
+
+  COMO FUNCIONA: O Maven lê este arquivo, baixa as bibliotecas
+  listadas em <dependencies> e empacota o projeto em um .jar
+  executável quando você roda "mvn package".
+
+  O QUE FAZER: Se precisar adicionar uma nova biblioteca Java,
+  adicione um bloco <dependency> dentro de <dependencies>.
+  ============================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    PARENT: Herda configurações padrão do Spring Boot 3.2.5.
+    Isso define versões compatíveis de todas as dependências
+    automaticamente, evitando conflitos de versão.
+
+    ⚠️ ATENÇÃO: Usamos 3.2.5 e não 4.x porque a versão 4
+    ainda é experimental e causou erros de compatibilidade
+    durante o desenvolvimento (erro reportado na seção 7.2
+    do relatório da disciplina anterior).
+  -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.5</version>
+  </parent>
+
+  <!-- Identificação do projeto -->
+  <groupId>com.petshop</groupId>
+  <artifactId>petshop-api</artifactId>
+  <version>1.0.0</version>
+
+  <properties>
+    <!-- Define que o projeto usa Java 21 (LTS mais recente) -->
+    <java.version>21</java.version>
+  </properties>
+
+  <dependencies>
+
+    <!--
+      spring-boot-starter-web
+      PARA QUE SERVE: Habilita a criação de APIs REST com Spring MVC.
+      Inclui o servidor Tomcat embutido — a API roda sem precisar
+      instalar nenhum servidor externo.
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!--
+      spring-boot-starter-data-jpa
+      PARA QUE SERVE: Habilita o JPA (Java Persistence API) com
+      Hibernate por baixo. Permite mapear classes Java para tabelas
+      do banco de dados com anotações como @Entity, @Table, etc.
+      Também fornece o Spring Data JPA com os repositórios prontos.
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!--
+      spring-boot-starter-security
+      PARA QUE SERVE: Habilita o Spring Security para proteger
+      endpoints da API. Por padrão bloqueia tudo — por isso
+      precisamos configurar o SecurityConfig.java para liberar
+      os endpoints públicos (login, registro).
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!--
+      spring-boot-starter-validation
+      PARA QUE SERVE: Habilita Bean Validation com anotações
+      como @NotBlank, @Email, @NotNull nos DTOs.
+      Quando o front-end manda dados inválidos, a API rejeita
+      automaticamente e retorna mensagem de erro.
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <!--
+      mysql-connector-j
+      PARA QUE SERVE: Driver JDBC do MySQL. Permite que o Java
+      se conecte ao banco de dados MySQL.
+      scope=runtime significa que só é necessário em execução,
+      não durante a compilação do código.
+    -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!--
+      jjwt (JSON Web Token) — 3 artefatos necessários:
+      - jjwt-api: interfaces públicas que usamos no código
+      - jjwt-impl: implementação interna (scope=runtime, não usamos diretamente)
+      - jjwt-jackson: serialização JSON do token (scope=runtime)
+
+      PARA QUE SERVE: Gera e valida os tokens JWT de autenticação.
+      Versão 0.12.5 é a mais recente e usa API diferente das versões
+      antigas (0.9.x). Se você encontrar tutoriais antigos com
+      Jwts.parser().setSigningKey(), saiba que na 0.12.x o método
+      correto é Jwts.parser().verifyWith().
+    -->
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>0.12.5</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>0.12.5</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.12.5</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!--
+      lombok
+      PARA QUE SERVE: Gera automaticamente código repetitivo
+      via anotações:
+        @Data        → gera getters, setters, equals, hashCode, toString
+        @Builder     → gera o padrão Builder (ex: Pet.builder().nome("Rex").build())
+        @NoArgsConstructor → gera construtor sem argumentos
+        @AllArgsConstructor → gera construtor com todos os argumentos
+        @RequiredArgsConstructor → gera construtor com campos final (usado nos Services)
+
+      optional=true significa que não é incluído no .jar final,
+      só é usado durante a compilação.
+    -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        Plugin do Spring Boot para Maven.
+        Permite rodar a aplicação com: mvn spring-boot:run
+        Também empacota o .jar executável com: mvn package
+      -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <!-- Exclui o Lombok do .jar final pois não é necessário em runtime -->
+          <excludes>
+            <exclude>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
