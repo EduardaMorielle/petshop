@@ -30,6 +30,9 @@ COPY package*.json ./
 # npm install --include=dev: instala as dependências de desenvolvimento
 # do Angular mesmo quando o lockfile não está versionado no Git.
 RUN npm install --include=dev
+# Garante explicitamente que o builder do Angular esteja disponível
+# antes da etapa de build, evitando falhas de resolução do builder.
+RUN npm install --include=dev @angular-devkit/build-angular@17.3.0
 
 # Copia o restante do código e compila para produção
 COPY . .
