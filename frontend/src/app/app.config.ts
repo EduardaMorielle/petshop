@@ -17,6 +17,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     // provideHttpClient: habilita o HttpClient para fazer requisições HTTP.
     // withInterceptors([authInterceptor]): registra nosso interceptor JWT.
     // Todo HttpClient.get/post/put/delete vai passar pelo authInterceptor.
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
 
     // provideAnimations: habilita as animações do Angular Material.
     // Sem isso, componentes como MatDialog, MatSnackBar e MatMenu

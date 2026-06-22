@@ -18,7 +18,7 @@
 export const environment = {
   production: true,
 
-  // URL base da API REST no servidor da UEA
-  // Porta 8743: escolhida para evitar conflito com outros alunos
-  apiUrl: 'http://172.25.1.60:8743/api'
+  // URL base da API REST quando o backend está rodando localmente via Docker
+  // A porta 28743 é a porta publicada pelo docker-compose para a API
+  apiUrl: 'http://localhost:28743/api'
 };

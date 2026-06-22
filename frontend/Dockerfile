@@ -27,8 +27,9 @@ WORKDIR /app
 
 # Copia os arquivos de dependências primeiro (cache do Docker)
 COPY package*.json ./
-# npm install: instala todas as dependências do package.json
-RUN npm install
+# npm install --include=dev: instala as dependências de desenvolvimento
+# do Angular mesmo quando o lockfile não está versionado no Git.
+RUN npm install --include=dev
 
 # Copia o restante do código e compila para produção
 COPY . .

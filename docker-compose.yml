@@ -19,11 +19,9 @@
 #   "db" é resolvido pelo Docker para o IP interno do container MySQL.
 #
 # PORTAS ESCOLHIDAS:
-#   8743 (API) e 4743 (frontend) — portas específicas para evitar
+#   28743 (API) e 24743 (frontend) — portas específicas para evitar
 #   conflito com outros alunos no servidor da UEA.
 # ============================================================
-
-version: '3.8'
 
 services:
 
@@ -59,7 +57,7 @@ services:
     build: ./backend           # usa o Dockerfile em ./backend/
     container_name: petshop-api
     ports:
-      - "8743:8743"            # expõe a porta da API para o host
+      - "28743:8743"            # expõe a porta da API para o host (host:container)
     environment:
       # Sobrescreve as configurações do application.properties via variáveis
       # de ambiente. Isso permite usar as mesmas configurações do Docker
@@ -81,7 +79,7 @@ services:
     build: ./frontend          # usa o Dockerfile em ./frontend/
     container_name: petshop-frontend
     ports:
-      - "4743:4743"            # expõe a porta do Nginx para o host
+      - "24743:4743"            # expõe a porta do Nginx para o host (host:container)
     depends_on:
       - api                    # sobe depois da API (boa prática)
 
