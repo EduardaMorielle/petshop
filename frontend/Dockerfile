@@ -2,21 +2,18 @@
 # ARQUIVO: frontend/Dockerfile
 # O QUE É: Instruções para criar a imagem Docker do front-end Angular.
 #
-# ESTRATÉGIA MULTI-STAGE BUILD (mesmo conceito do backend):
+# ESTRATÉGIA MULTI-STAGE BUILD:
+#   ESTÁGIO 1 (build): Node.js instala dependências e compila o Angular.
+#   ESTÁGIO 2 (runtime): Nginx serve os arquivos estáticos compilados.
 #
-#   ESTÁGIO 1 (build): usa Node.js para instalar dependências
-#   e compilar o Angular em arquivos estáticos (HTML, CSS, JS).
+# VARIÁVEL API_URL:
+#   O Angular "bake" a URL da API no momento do build (não em runtime).
+#   Por isso usamos um ARG do Docker para injetar o IP correto:
+#     - localhost:28743  → para rodar na sua máquina local
+#     - 172.25.1.60:28743 → para rodar no servidor da UEA
 #
-#   ESTÁGIO 2 (runtime): usa o Nginx (servidor web leve) para
-#   servir os arquivos estáticos compilados. A imagem final
-#   não tem Node.js nem node_modules (apenas ~50MB).
-#
-# POR QUE NGINX?
-#   O Angular compilado é apenas HTML, CSS e JavaScript estáticos.
-#   O Nginx é um servidor web extremamente eficiente para servir
-#   arquivos estáticos. Além disso, precisamos de uma configuração
-#   especial (try_files) para que o roteamento do Angular funcione
-#   corretamente (definida no nginx.conf).
+#   O docker-compose.yml passa o valor via args > API_URL.
+#   Se não informado, o padrão é localhost:28743.
 # ============================================================
 
 # --------------------------------------------------------
@@ -25,21 +22,22 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copia os arquivos de dependências primeiro (cache do Docker)
-COPY package*.json ./
-# npm install --include=dev: instala as dependências de desenvolvimento
-# do Angular mesmo quando o lockfile não está versionado no Git.
-RUN npm install --include=dev
-# Garante explicitamente que o builder do Angular esteja disponível
-# antes da etapa de build, evitando falhas de resolução do builder.
-RUN npm install --include=dev @angular-devkit/build-angular@17.3.0
+# ARG: recebe o IP/host da API passado pelo docker-compose.
+# Padrão: localhost (para rodar local). No servidor UEA: 172.25.1.60
+ARG API_URL=http://localhost:28743/api
 
-# Copia o restante do código e compila para produção
+# Copia dependências e instala (camada de cache do Docker)
+COPY package*.json ./
+RUN npm install --include=dev
+
+# Copia o código-fonte
 COPY . .
-# ng build com configuração de produção:
-#   - minifica o código (menor tamanho)
-#   - habilita tree-shaking (remove código não usado)
-#   - gera hashes nos nomes dos arquivos (cache busting)
+
+# Sobrescreve o environment.ts com a URL correta ANTES do build.
+# sed substitui o placeholder pela variável injetada pelo Docker.
+RUN sed -i "s|http://localhost:28743/api|${API_URL}|g" src/environments/environment.ts
+
+# Compila para produção
 RUN npm run build
 
 # --------------------------------------------------------
@@ -47,13 +45,10 @@ RUN npm run build
 # --------------------------------------------------------
 FROM nginx:alpine
 
-# Copia os arquivos compilados para a pasta padrão do Nginx.
-# O Angular 17 gera os arquivos em dist/<nome-projeto>/browser/
+# Copia os arquivos compilados para o Nginx
 COPY --from=build /app/dist/petshop-frontend/browser /usr/share/nginx/html
 
-# Copia a configuração customizada do Nginx
-# (necessária para o roteamento SPA funcionar)
+# Configuração do Nginx (SPA routing com try_files)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Porta onde o Nginx vai escutar
 EXPOSE 4743

@@ -21,7 +21,7 @@ import { Pet, Usuario } from '../../core/models/models';
   standalone: true,
   imports: [
     CommonModule, MatTableModule, MatPaginatorModule, MatButtonModule,
-    MatIconModule, MatDialogModule, MatCardModule, MatSnackBarModule, MatTooltipModule
+    MatIconModule, MatDialogModule, MatCardModule, MatSnackBarModule, MatTooltipModule, MatSelectModule
   ],
   template: `
     <div class="page-container">
@@ -142,8 +142,10 @@ export class PetsComponent implements OnInit {
           <input matInput formControlName="idade" type="number">
         </mat-form-field>
         <mat-form-field class="full-width">
-          <mat-label>ID do Tutor</mat-label>
-          <input matInput formControlName="tutorId" type="number">
+          <mat-label>Tutor</mat-label>
+          <mat-select formControlName="tutorId">
+            <mat-option *ngFor="let u of usuarios" [value]="u.id">{{ u.nome }} ({{ u.email }})</mat-option>
+          </mat-select>
         </mat-form-field>
       </form>
     </mat-dialog-content>
@@ -161,14 +163,17 @@ export class PetFormComponent implements OnInit {
     idade: [null as number | null],
     tutorId: [null as number | null, Validators.required]
   });
+  usuarios: Usuario[] = [];
 
   constructor(
     private fb: FormBuilder, private svc: PetService,
+    private usuarioSvc: UsuarioService,
     private ref: MatDialogRef<PetFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Pet | null
   ) {}
 
   ngOnInit() {
+    this.usuarioSvc.listar().subscribe(u => this.usuarios = u);
     if (this.data) this.form.patchValue(this.data);
   }
 

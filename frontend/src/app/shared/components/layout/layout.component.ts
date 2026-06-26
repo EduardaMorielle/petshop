@@ -72,10 +72,9 @@ import { CommonModule } from '@angular/common';
             onerror: se a imagem não existir, esconde o elemento
             para não quebrar o layout
           -->
-          <img src="assets/images/logo.png" alt="Logo"
-               style="width:80px;border-radius:50%"
-               onerror="this.style.display='none'">
-          <h3 style="margin-top:8px;color:#3f51b5">Petshop</h3>
+          <img [src]="logoSrc" alt="Logo"
+            style="width:80px;border-radius:50%">
+          <h3 style="margin-top:8px;color:#3f51b5">PetShop Care</h3>
         </div>
 
         <!--
@@ -113,7 +112,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Barra superior com nome do sistema, usuário logado e botão de logout -->
         <mat-toolbar color="primary">
-          <span>Petshop Manager</span>
+          <span>PetShop Care</span>
           <span style="flex:1"></span> <!-- empurra os itens seguintes para a direita -->
           <!-- user?.nome: optional chaining — não quebra se user for null -->
           <span style="margin-right:16px">{{ user?.nome }}</span>
@@ -138,6 +137,14 @@ import { CommonModule } from '@angular/common';
   ]
 })
 export class LayoutComponent {
+  readonly logoSrc = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="PetShop Care">
+      <rect width="96" height="96" rx="24" fill="#3f51b5" />
+      <circle cx="48" cy="44" r="18" fill="#ffffff" opacity="0.95" />
+      <text x="48" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#3f51b5">PC</text>
+    </svg>
+  `);
+
   // Pega os dados do usuário logado para exibir na toolbar
   user = this.auth.getUser();
 

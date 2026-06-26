@@ -5,6 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { CapitalizePipe } from '../../core/pipes/capitalize.pipe';
 import { MatDialogModule, MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,7 +20,8 @@ import { Servico } from '../../core/models/models';
   standalone: true,
   imports: [
     CommonModule, MatTableModule, MatPaginatorModule, MatButtonModule,
-    MatIconModule, MatDialogModule, MatCardModule, MatSnackBarModule, MatTooltipModule
+    MatIconModule, MatDialogModule, MatCardModule, MatSnackBarModule, MatTooltipModule,
+    CapitalizePipe
   ],
   template: `
     <div class="page-container">
@@ -37,7 +39,7 @@ import { Servico } from '../../core/models/models';
           <table mat-table [dataSource]="servicos" style="width:100%;margin-top:16px">
             <ng-container matColumnDef="nome">
               <th mat-header-cell *matHeaderCellDef>Nome</th>
-              <td mat-cell *matCellDef="let s">{{ s.nome }}</td>
+              <td mat-cell *matCellDef="let s">{{ s.nome | capitalize }}</td>
             </ng-container>
             <ng-container matColumnDef="descricao">
               <th mat-header-cell *matHeaderCellDef>Descrição</th>

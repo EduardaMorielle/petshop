@@ -20,6 +20,7 @@
 // ============================================================
 
 import { Component } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -51,9 +52,8 @@ import { AuthService } from '../../core/services/auth.service';
 
         <!-- Cabeçalho com logo e título -->
         <div style="text-align:center;margin-bottom:24px">
-          <img src="assets/images/logo.png" alt="Logo" style="width:80px"
-               onerror="this.style.display='none'">
-          <h2 style="color:#3f51b5;margin-top:8px">Petshop Manager</h2>
+          <img [src]="logoSrc" alt="Logo" style="width:80px">
+          <h2 style="color:#3f51b5;margin-top:8px">PetShop Care</h2>
           <p style="color:#666">Faça login para continuar</p>
         </div>
 
@@ -104,6 +104,14 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginComponent {
 
+  readonly logoSrc = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="PetShop Care">
+      <rect width="96" height="96" rx="24" fill="#3f51b5" />
+      <circle cx="48" cy="44" r="18" fill="#ffffff" opacity="0.95" />
+      <text x="48" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#3f51b5">PC</text>
+    </svg>
+  `);
+
   // FormBuilder cria o FormGroup com os controles e suas validações
   form = this.fb.group({
     // Validators.required: campo obrigatório
@@ -139,8 +147,12 @@ export class LoginComponent {
 
       // error: login falhou (credenciais erradas, API fora, etc.)
       // Exibe mensagem no snackbar e reabilita o botão
-      error: () => {
-        this.snack.open('Email ou senha inválidos', 'Fechar', { duration: 3000 });
+      error: (error: HttpErrorResponse) => {
+        const message = error.status === 0
+          ? 'Não foi possível conectar à API'
+          : 'Email ou senha inválidos';
+
+        this.snack.open(message, 'Fechar', { duration: 3000 });
         this.loading = false;
       }
     });

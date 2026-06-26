@@ -29,65 +29,64 @@ services:
   # SERVIÇO: db (MySQL 8)
   # --------------------------------------------------------
   db:
-    image: mysql:8.0          # usa a imagem oficial do MySQL 8
+    image: mysql:8.0
     container_name: petshop-db
     environment:
-      MYSQL_ROOT_PASSWORD: root123     # senha do root (não usada pela app)
-      MYSQL_DATABASE: petshopdb        # banco criado automaticamente
-      MYSQL_USER: petshop              # usuário da aplicação
-      MYSQL_PASSWORD: petshop123       # senha do usuário da aplicação
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: petshopdb
+      MYSQL_USER: petshop
+      MYSQL_PASSWORD: petshop123
     ports:
-      - "3306:3306"  # expõe a porta do MySQL para o host (útil para depuração)
+      - "3306:3306"
     volumes:
-      # Volume persistente: os dados do banco sobrevivem a reinicializações
-      # Sem isso, os dados seriam apagados toda vez que o container reiniciar
       - db_data:/var/lib/mysql
     healthcheck:
-      # Verifica se o MySQL está pronto para receber conexões
-      # O container da API só sobe DEPOIS que este healthcheck passar
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s   # verifica a cada 10 segundos
-      timeout: 5s     # timeout de 5 segundos por verificação
-      retries: 5      # tenta 5 vezes antes de marcar como unhealthy
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # --------------------------------------------------------
   # SERVIÇO: api (Spring Boot)
   # --------------------------------------------------------
   api:
-    build: ./backend           # usa o Dockerfile em ./backend/
+    build: ./backend
     container_name: petshop-api
     ports:
-      - "28743:8743"            # expõe a porta da API para o host (host:container)
+      - "28743:8743"
     environment:
-      # Sobrescreve as configurações do application.properties via variáveis
-      # de ambiente. Isso permite usar as mesmas configurações do Docker
-      # sem modificar o arquivo de propriedades.
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/petshopdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Manaus
       SPRING_DATASOURCE_USERNAME: petshop
       SPRING_DATASOURCE_PASSWORD: petshop123
     depends_on:
       db:
-        # Aguarda o healthcheck do MySQL passar antes de subir
-        # Sem isso, a API tentaria conectar antes do banco estar pronto
-        # e falharia na inicialização
         condition: service_healthy
 
   # --------------------------------------------------------
   # SERVIÇO: frontend (Angular + Nginx)
   # --------------------------------------------------------
   frontend:
-    build: ./frontend          # usa o Dockerfile em ./frontend/
+    build:
+      context: ./frontend
+      args:
+        # API_URL: URL da API que o navegador vai usar para chamar o backend.
+        #
+        # ⚠️ ATENÇÃO: o Angular "bake" esta URL no JavaScript compilado.
+        # Portanto o valor precisa ser o endereço que o NAVEGADOR consegue acessar.
+        #
+        # LOCALMENTE (sua máquina):
+        #   API_URL: http://localhost:28743/api
+        #
+        # SERVIDOR DA UEA (172.25.1.60):
+        #   API_URL: http://172.25.1.60:28743/api
+        #
+        # Mude apenas esta linha ao trocar de ambiente:
+        API_URL: http://localhost:28743/api
     container_name: petshop-frontend
     ports:
-      - "24743:4743"            # expõe a porta do Nginx para o host (host:container)
+      - "24743:4743"
     depends_on:
-      - api                    # sobe depois da API (boa prática)
+      - api
 
-# --------------------------------------------------------
-# VOLUMES: armazenamento persistente
-# --------------------------------------------------------
 volumes:
-  # Volume nomeado para os dados do MySQL.
-  # Gerenciado pelo Docker — persiste mesmo após "docker-compose down".
-  # Para apagar os dados: "docker-compose down -v"
   db_data:

@@ -1,24 +1,24 @@
 // ============================================================
 // ARQUIVO: environment.ts
-// O QUE É: Arquivo de configuração de ambiente.
-//          Define variáveis que mudam dependendo do ambiente
-//          (desenvolvimento local vs produção no servidor UEA).
+// O QUE É: Configuração da URL base da API.
 //
-// COMO FUNCIONA:
-//   Os services importam environment.apiUrl para montar a URL
-//   das requisições. Assim, se a URL mudar, só precisa alterar aqui.
+// ⚠️ NÃO MUDE A URL DIRETAMENTE AQUI PARA TROCAR DE AMBIENTE.
 //
-// ⚠️ IMPORTANTE PARA DESENVOLVIMENTO LOCAL:
-//   Se quiser testar no computador sem Docker, mude apiUrl para:
-//   apiUrl: 'http://localhost:8743/api'
+// Esta URL é substituída automaticamente pelo Dockerfile do frontend
+// durante o build Docker, usando a variável API_URL do docker-compose.yml.
 //
-//   Para o servidor da UEA, mantenha com o IP 172.25.1.60.
+// Para trocar de ambiente, edite APENAS o docker-compose.yml:
+//
+//   Localmente (sua máquina):
+//     API_URL: http://localhost:28743/api
+//
+//   Servidor da UEA (172.25.1.60):
+//     API_URL: http://172.25.1.60:28743/api
+//
+// O Dockerfile faz:  sed -i "s|http://localhost:28743/api|${API_URL}|g" environment.ts
 // ============================================================
 
 export const environment = {
   production: true,
-
-  // URL base da API REST quando o backend está rodando localmente via Docker
-  // A porta 28743 é a porta publicada pelo docker-compose para a API
   apiUrl: 'http://localhost:28743/api'
 };

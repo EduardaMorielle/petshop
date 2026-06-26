@@ -1,15 +1,15 @@
 package com.petshop.api.controller;
 
-import com.petshop.api.model.Usuario;
 import com.petshop.api.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -20,9 +20,15 @@ public class UsuarioController {
 
     @GetMapping
     public List<Map<String, Object>> listar() {
-        return usuarioRepository.findAll().stream()
-                .map(u -> Map.of("id", u.getId(), "nome", u.getNome(),
-                        "email", u.getEmail(), "perfil", u.getPerfil().name()))
-                .collect(Collectors.toList());
+        List<Map<String, Object>> lista = new ArrayList<>();
+        for (var u : usuarioRepository.findAll()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", u.getId());
+            m.put("nome", u.getNome());
+            m.put("email", u.getEmail());
+            m.put("perfil", u.getPerfil().name());
+            lista.add(m);
+        }
+        return lista;
     }
 }
